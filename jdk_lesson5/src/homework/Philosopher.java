@@ -48,15 +48,27 @@ public class Philosopher implements Runnable {
     }
 
     /**
-     * Метод представляет действие философа в процессе взятия вилок
+     * Попытка взять обе вилки.
+     * Если вилки удалось захватить, философ продолжает выполнение.
+     * Если философ не может взять обе вилки одновременно, он освобождает предыдущую захваченную вилку
+     * и повторяет попытку позже.
      *
-     * @throws InterruptedException если поток был прерван во время взятия вилок
+     * @throws InterruptedException если поток был прерван во время ожидания захвата обеих вилок.
      */
     private void pickUpForks() throws InterruptedException {
-        leftFork.pickUp();
-        System.out.println("Философ " + id + " берет левую вилку");
-        rightFork.pickUp();
-        System.out.println("Философ " + id + " берет правую вилку");
+        while (true) {
+            if (leftFork.tryPickUp()) {
+                System.out.println("Философ " + id + " берет левую вилку");
+                if (rightFork.tryPickUp()) {
+                    System.out.println("Философ " + id + " берет правую вилку");
+                    return; // Философ взял обе вилки
+                } else {
+                    leftFork.putDown();
+                    System.out.println("Философ " + id + " кладет левую вилку, т.к. правая занята");
+                }
+            }
+            Thread.sleep(100); // Пауза перед повторной попыткой
+        }
     }
 
     /**
